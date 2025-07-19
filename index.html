@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traductor Español-Chino con Visualización</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="floating-particles" id="floatingParticles"></div>
+    
+    <div class="instructions">
+        <div class="main-instruction">
+            ✨ español o inglés a chino Mandarin by joseAlejandro ✨
+        </div>
+        <div class="sub-instruction">
+            Cada carácter construye tu historia visual con efectos únicos
+        </div>
+        <div class="sub-instructions">
+            <span onclick="toggleHistory()" class="interactive-element">📚 Historial</span>
+            <span onclick="toggleCustomization()" class="interactive-element">🎨 Personalizar</span>
+            <span onclick="toggleCollaboration()" class="interactive-element">🤝 Colaborar</span>
+        </div>
+    </div>
+    
+    <div class="message-display" id="messageDisplay"></div>
+    
+    <div class="mode-controls">
+        <button class="mode-button active" id="sequentialBtn" title="Modo Secuencial">⏭</button>
+        <button class="mode-button" id="cascadeBtn" title="Modo Cascada">🌊</button>
+        <button class="mode-button" id="burstBtn" title="Modo Explosión">✨</button>
+        <button class="clear-button" id="clearBtn">Limpiar</button>
+    </div>
+    
+    <!-- Panel de Historial -->
+    <div class="history-panel" id="historyPanel">
+        <div class="panel-header">
+            <h3>Historial de Mensajes</h3>
+            <button onclick="toggleHistory()" class="close-btn">×</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+        <div class="history-actions">
+            <button onclick="exportAsGif()" class="action-btn">📹 Exportar GIF</button>
+            <button onclick="clearHistory()" class="action-btn danger">🗑 Limpiar Todo</button>
+        </div>
+    </div>
+
+    <!-- Panel de Personalización -->
+    <div class="customization-panel" id="customizationPanel">
+        <div class="panel-header">
+            <h3>Personalizar Visualización</h3>
+            <button onclick="toggleCustomization()" class="close-btn">×</button>
+        </div>
+        <div class="custom-options">
+            <div class="option-group">
+                <label>Tamaño de Fuente:</label>
+                <input type="range" id="fontSizeSlider" min="1" max="5" step="0.1" value="2.5" onchange="updateFontSize(this.value)">
+                <span id="fontSizeValue">2.5em</span>
+            </div>
+            <div class="option-group">
+                <label>Tipo de Fuente:</label>
+                <select id="fontFamilySelect" onchange="updateFontFamily(this.value)">
+                    <option value="Courier New">Courier New</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+            </div>
+            <div class="option-group">
+                <label>Paleta de Colores:</label>
+                <div class="color-palette-options">
+                    <button onclick="useDefaultPalette()" class="palette-btn">Por Defecto</button>
+                    <button onclick="useCustomPalette('warm')" class="palette-btn">Cálidos</button>
+                    <button onclick="useCustomPalette('cool')" class="palette-btn">Fríos</button>
+                    <button onclick="useCustomPalette('neon')" class="palette-btn">Neón</button>
+                </div>
+            </div>
+            <div class="option-group">
+                <label>Entrada de Voz:</label>
+                <button onclick="toggleVoiceInput()" id="voiceBtn" class="voice-btn">🎤 Iniciar Voz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Colaboración -->
+    <div class="collaboration-panel" id="collaborationPanel">
+        <div class="panel-header">
+            <h3>Colaborar</h3>
+            <button onclick="toggleCollaboration()" class="close-btn">×</button>
+        </div>
+        <div class="collab-options">
+            <div class="option-group">
+                <button onclick="createCollabRoom()" class="action-btn">🏠 Crear Sala</button>
+                <button onclick="joinCollabRoom()" class="action-btn">🚪 Unirse a Sala</button>
+            </div>
+            <div class="option-group" id="roomInfo" style="display: none;">
+                <label>ID de Sala:</label>
+                <input type="text" id="roomIdDisplay" readonly>
+                <button onclick="copyRoomId()" class="copy-btn">📋</button>
+            </div>
+            <div class="collaborators" id="collaboratorsList"></div>
+        </div>
+    </div>
+
+    <div class="typing-area">
+        <div class="translation-display" id="translationDisplay">
+            <div class="translation-label">🇨🇳 Traducción al Chino:</div>
+            <div class="translation-content"></div>
+        </div>
+        <div class="input-row">
+            <input type="text" id="textInput" placeholder="Escribe en español o inglés..." autofocus>
+            <button onclick="saveCurrentMessage()" class="save-btn" title="Guardar Mensaje">💾</button>
+            <button onclick="shareMessage()" class="share-btn" title="Compartir Mensaje">🔗</button>
+        </div>
+    </div>
+
+    <script src="js/translation.js"></script>
+    <script src="js/visualization.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
