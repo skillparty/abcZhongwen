@@ -1,0 +1,23 @@
+{
+  "name": "letras_app",
+  "version": "1.0.0",
+  "description": "**Español o Inglés a Chino Mandarín by joseAlejandro**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skillparty/abcZhongwen.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/skillparty/abcZhongwen/issues"
+  },
+  "homepage": "https://github.com/skillparty/abcZhongwen#readme",
+  "dependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}

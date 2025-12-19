@@ -1,8 +1,8 @@
-# abcZhongwen - Traductor Multiidioma a Chino Mandarín
+# abcZhongwen - Traductor Musical Multiidioma a Chino Mandarín 🎵
 
-**Español o Inglés a Chino Mandarín by joseAlejandro**
+**Español o Inglés a Chino Mandarín con Pentagrama Musical by joseAlejandro**
 
-Una aplicación web interactiva que permite escribir mensajes en español o inglés y visualizar su traducción automática al chino mandarín simplificado con efectos visuales y sonoros únicos.
+Una aplicación web interactiva que permite escribir mensajes en español o inglés y visualizar su traducción automática al chino mandarín simplificado con efectos visuales, sonoros y un **pentagrama musical** que muestra las notas generadas en tiempo real.
 
 ## 🚀 Demo en Vivo
 Visita: [https://skillparty.github.io/abcZhongwen](https://skillparty.github.io/abcZhongwen)
@@ -14,9 +14,29 @@ Visita: [https://skillparty.github.io/abcZhongwen](https://skillparty.github.io/
 
 ## 🌟 Características Principales
 
+### 🎼 Sistema Musical Mejorado (NUEVO)
+- **Pentagrama visual** que muestra las notas musicales en tiempo real
+- **Visualización del ritmo** con barras de frecuencia
+- **Escalas musicales** configurables:
+  - Pentatónica (Oriental)
+  - Mayor (Alegre)
+  - Menor (Melancólica)
+  - China Tradicional
+  - Blues
+- **Instrumentos virtuales**: Piano, Flauta, 8-Bit Retro, Sintetizador
+- **Patrones rítmicos**: Constante, Vals, Swing, Marcha
+- **Reproducción de melodía** de los caracteres chinos
+
+### 🖼️ Interface de Dos Ventanas (NUEVO)
+- **Panel de Entrada**: Escribe en español o inglés con efectos visuales
+- **Panel de Traducción**: Visualiza los caracteres chinos con:
+  - Animaciones de aparición
+  - Barras musicales por carácter
+  - Botón para reproducir el sonido de la traducción
+
 ### 📝 Traducción Automática
-- **Traducción en tiempo real** de español a chino mandarín simplificado
-- **Diccionario local** con más de 100 palabras comunes
+- **Traducción en tiempo real** de español/inglés a chino mandarín simplificado
+- **Diccionario local** con más de 800 palabras comunes
 - **API de respaldo** para traducciones más precisas
 - **Visualización simultánea** del texto original y traducido
 
@@ -27,12 +47,14 @@ Visita: [https://skillparty.github.io/abcZhongwen](https://skillparty.github.io/
   - **Cascada**: Aparición rápida en cascada
   - **Explosión**: Aparición aleatoria tipo burst
 - **Partículas y conexiones** entre caracteres
-- **Paletas de colores personalizables**
+- **Paletas de colores personalizables** (Por defecto, Cálidos, Fríos, Neón)
 
-### 🔊 Audio y Voz
-- **Sonidos únicos** para cada carácter basados en frecuencias musicales
-- **Reconocimiento de voz** en español
-- **Armonía cronológica** que crea melodías mientras escribes
+### 🔊 Audio Avanzado
+- **Sonidos únicos** para cada carácter basados en escalas musicales
+- **ADSR Envelope** para sonidos más naturales
+- **Reverb y compresión** para mejor calidad de audio
+- **Vibrato sutil** en las notas
+- **Reconocimiento de voz** en español e inglés
 
 ### 💾 Gestión de Mensajes
 - **Historial automático** de mensajes y traducciones

@@ -7,6 +7,17 @@ class SpanishChineseApp {
         this.burstBtn = document.getElementById('burstBtn');
         this.clearBtn = document.getElementById('clearBtn');
         
+        // Elementos para dos ventanas
+        this.chineseCharactersDisplay = document.getElementById('chineseCharacters');
+        this.pinyinDisplay = document.getElementById('pinyinDisplay');
+        this.chineseMusicBars = document.getElementById('chineseMusicBars');
+        this.messageDisplayInline = document.getElementById('messageDisplay');
+        
+        // Elementos para selector de idioma
+        this.inputLanguage = localStorage.getItem('inputLanguage') || 'es';
+        this.inputPanelIcon = document.getElementById('inputPanelIcon');
+        this.inputPanelTitle = document.getElementById('inputPanelTitle');
+        
         // Estado de la aplicación
         this.currentMode = 'sequential';
         this.messageChars = [];
@@ -32,69 +43,357 @@ class SpanishChineseApp {
         const savedFontSize = localStorage.getItem('fontSize') || '2.5em';
         const savedFontFamily = localStorage.getItem('fontFamily') || 'Courier New';
         
-        visualizer.updateFontSize(parseFloat(savedFontSize));
-        visualizer.updateFontFamily(savedFontFamily);
+        if (typeof visualizer !== 'undefined') {
+            visualizer.updateFontSize(parseFloat(savedFontSize));
+            visualizer.updateFontFamily(savedFontFamily);
+        }
+        
+        // Aplicar idioma guardado
+        this.setInputLanguage(this.inputLanguage, false);
         
         // Mantener el foco en el input
-        this.textInput.focus();
+        if (this.textInput) {
+            this.textInput.focus();
+        }
         
-        console.log('Aplicación Traductor Español-Chino inicializada');
+        console.log('🎵 Aplicación Traductor Musical inicializada');
+    }
+    
+    // Establecer idioma de entrada
+    setInputLanguage(lang, save = true) {
+        this.inputLanguage = lang;
+        
+        // Actualizar botones
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(lang === 'es' ? 'langSpanish' : 'langEnglish');
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        // Actualizar panel de entrada
+        if (this.inputPanelIcon) {
+            this.inputPanelIcon.textContent = lang === 'es' ? '🇪🇸' : '🇬🇧';
+        }
+        if (this.inputPanelTitle) {
+            this.inputPanelTitle.textContent = lang === 'es' ? 'Escribe en Español' : 'Write in English';
+        }
+        if (this.textInput) {
+            this.textInput.placeholder = lang === 'es' ? 'Escribe aquí...' : 'Type here...';
+        }
+        
+        // Actualizar idioma en el traductor
+        if (typeof translator !== 'undefined') {
+            translator.sourceLanguage = lang;
+        }
+        
+        // Actualizar reconocimiento de voz
+        if (typeof audioManager !== 'undefined' && audioManager.recognition) {
+            audioManager.recognition.lang = lang === 'es' ? 'es-ES' : 'en-US';
+        }
+        
+        // Guardar preferencia
+        if (save) {
+            localStorage.setItem('inputLanguage', lang);
+            this.showNotification(lang === 'es' ? 'Idioma: Español' : 'Language: English', 'info');
+        }
     }
 
     setupEventListeners() {
         // Evento principal de entrada de texto
-        this.textInput.addEventListener('input', (e) => {
-            audioManager.initAudio();
-            const newText = e.target.value;
-            
-            // Solo agregar nuevos caracteres del texto original
-            if (newText.length > this.messageChars.length) {
-                for (let i = this.messageChars.length; i < newText.length; i++) {
-                    this.messageChars.push(newText[i]);
-                    this.addCharacterToMessage(newText[i], i);
-                }
-            }
-            // Manejar backspace
-            else if (newText.length < this.messageChars.length) {
-                const charsToRemove = this.messageChars.length - newText.length;
-                this.messageChars = this.messageChars.slice(0, -charsToRemove);
+        if (this.textInput) {
+            this.textInput.addEventListener('input', (e) => {
+                audioManager.initAudio();
+                const newText = e.target.value;
                 
-                // Remover elementos de caracteres
-                const charElements = visualizer.messageDisplay.querySelectorAll('.char-display');
-                for (let i = 0; i < charsToRemove; i++) {
-                    if (charElements[charElements.length - 1 - i]) {
-                        charElements[charElements.length - 1 - i].remove();
+                // Solo agregar nuevos caracteres del texto original
+                if (newText.length > this.messageChars.length) {
+                    for (let i = this.messageChars.length; i < newText.length; i++) {
+                        this.messageChars.push(newText[i]);
+                        this.addCharacterToMessage(newText[i], i);
                     }
                 }
-            }
-            
-            // Configurar traducción para mostrar en el campo de abajo
-            translator.setupTranslation(newText);
-        });
+                // Manejar backspace
+                else if (newText.length < this.messageChars.length) {
+                    const charsToRemove = this.messageChars.length - newText.length;
+                    this.messageChars = this.messageChars.slice(0, -charsToRemove);
+                    
+                    // Remover elementos de caracteres del display inline
+                    if (this.messageDisplayInline) {
+                        const charElements = this.messageDisplayInline.querySelectorAll('.char-display');
+                        for (let i = 0; i < charsToRemove; i++) {
+                            if (charElements[charElements.length - 1 - i]) {
+                                charElements[charElements.length - 1 - i].remove();
+                            }
+                        }
+                    }
+                    
+                    // Limpiar notas del pentagrama
+                    if (typeof musicStaff !== 'undefined') {
+                        musicStaff.clearNotes();
+                        // Re-agregar notas restantes
+                        this.messageChars.forEach((char, idx) => {
+                            musicStaff.addNote(char, idx);
+                        });
+                    }
+                }
+                
+                // Actualizar traducción al chino
+                this.updateChineseTranslation(newText);
+            });
+        }
 
         // Botones de modo
-        this.sequentialBtn.addEventListener('click', () => this.setMode('sequential'));
-        this.cascadeBtn.addEventListener('click', () => this.setMode('cascade'));
-        this.burstBtn.addEventListener('click', () => this.setMode('burst'));
-        this.clearBtn.addEventListener('click', () => this.clearMessage());
+        if (this.sequentialBtn) {
+            this.sequentialBtn.addEventListener('click', () => this.setMode('sequential'));
+        }
+        if (this.cascadeBtn) {
+            this.cascadeBtn.addEventListener('click', () => this.setMode('cascade'));
+        }
+        if (this.burstBtn) {
+            this.burstBtn.addEventListener('click', () => this.setMode('burst'));
+        }
+        if (this.clearBtn) {
+            this.clearBtn.addEventListener('click', () => this.clearMessage());
+        }
+
+        // Botón de reproducir traducción china
+        const playChineseBtn = document.getElementById('playChineseBtn');
+        if (playChineseBtn) {
+            playChineseBtn.addEventListener('click', () => this.playChineseTranslation());
+        }
 
         // Mantener foco en el input
-        this.textInput.addEventListener('blur', () => {
-            setTimeout(() => this.textInput.focus(), 100);
-        });
+        if (this.textInput) {
+            this.textInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (this.textInput) this.textInput.focus();
+                }, 100);
+            });
+        }
     }
 
     // Agregar carácter al mensaje (texto original con efectos)
     addCharacterToMessage(char, index) {
-        visualizer.addCharacterToMessage(char, index, this.currentMode);
+        // Agregar al display inline en el panel
+        if (this.messageDisplayInline) {
+            const charSpan = document.createElement('span');
+            charSpan.className = 'char-display';
+            charSpan.textContent = char;
+            charSpan.style.color = this.getCharColor(char);
+            charSpan.style.animationDelay = `${index * 0.05}s`;
+            this.messageDisplayInline.appendChild(charSpan);
+        }
         
         // Reproducir sonido
-        audioManager.playCharacterSound(char, index, this.currentMode);
+        if (typeof audioManager !== 'undefined') {
+            audioManager.playCharacterSound(char, index, this.currentMode);
+        }
         
         // Verificar finalización de palabra
         if (char === ' ' || index === this.messageChars.length - 1) {
             this.highlightCompletedWord(index);
         }
+    }
+    
+    // Obtener color para un carácter
+    getCharColor(char) {
+        const colors = {
+            'a': '#ff6b9d', 'b': '#4ecdc4', 'c': '#ffe66d', 'd': '#a8e6cf',
+            'e': '#ffd93d', 'f': '#ff8b94', 'g': '#95e1d3', 'h': '#6bcf7e',
+            'i': '#74b9ff', 'j': '#fd79a8', 'k': '#fdcb6e', 'l': '#e17055',
+            'm': '#00b894', 'n': '#00cec9', 'o': '#a29bfe', 'p': '#ffeaa7',
+            'q': '#fab1a0', 'r': '#81ecec', 's': '#55a3ff', 't': '#ff7675',
+            'u': '#fd79a8', 'v': '#fdcb6e', 'w': '#e17055', 'x': '#00b894',
+            'y': '#00cec9', 'z': '#a29bfe', ' ': '#ffffff'
+        };
+        return colors[char.toLowerCase()] || '#74b9ff';
+    }
+
+    // Actualizar traducción al chino
+    updateChineseTranslation(text) {
+        if (!text.trim()) {
+            if (this.chineseCharactersDisplay) {
+                this.chineseCharactersDisplay.innerHTML = '';
+            }
+            if (this.chineseMusicBars) {
+                this.chineseMusicBars.innerHTML = '';
+            }
+            return;
+        }
+        
+        // Primero intentar traducción local
+        let translation = this.translateLocally(text);
+        
+        // Verificar si la traducción tiene caracteres chinos
+        const hasChineseChars = /[\u4e00-\u9fff]/.test(translation);
+        const hasUntranslated = /[a-zA-Z]{2,}/.test(translation);
+        
+        // Si no hay caracteres chinos o hay palabras sin traducir, usar API
+        if (!hasChineseChars || hasUntranslated) {
+            this.translateWithAPI(text);
+        } else {
+            this.displayChineseCharacters(translation);
+        }
+    }
+    
+    // Traducción usando API externa
+    async translateWithAPI(text) {
+        try {
+            if (typeof translator !== 'undefined') {
+                const apiTranslation = await translator.translateToChineseAPI(text);
+                if (apiTranslation && /[\u4e00-\u9fff]/.test(apiTranslation)) {
+                    this.displayChineseCharacters(apiTranslation);
+                    return;
+                }
+            }
+        } catch (error) {
+            console.log('API translation failed, using local:', error);
+        }
+        
+        // Fallback a traducción local
+        const localTranslation = this.translateLocally(text);
+        this.displayChineseCharacters(localTranslation);
+    }
+    
+    // Traducción local mejorada
+    translateLocally(text) {
+        if (typeof translator !== 'undefined' && translator.multiLanguageToChinese) {
+            const dict = translator.multiLanguageToChinese;
+            const lowerText = text.toLowerCase().trim();
+            
+            // Primero intentar buscar la frase completa
+            if (dict[lowerText]) {
+                return dict[lowerText];
+            }
+            
+            // Intentar buscar frases de 2-3 palabras
+            const words = lowerText.split(/\s+/);
+            const result = [];
+            let i = 0;
+            
+            while (i < words.length) {
+                let found = false;
+                
+                // Intentar con 3 palabras
+                if (i + 2 < words.length) {
+                    const threeWords = `${words[i]} ${words[i+1]} ${words[i+2]}`;
+                    if (dict[threeWords]) {
+                        result.push(dict[threeWords]);
+                        i += 3;
+                        found = true;
+                        continue;
+                    }
+                }
+                
+                // Intentar con 2 palabras
+                if (i + 1 < words.length) {
+                    const twoWords = `${words[i]} ${words[i+1]}`;
+                    if (dict[twoWords]) {
+                        result.push(dict[twoWords]);
+                        i += 2;
+                        found = true;
+                        continue;
+                    }
+                }
+                
+                // Intentar palabra individual
+                const word = words[i].replace(/[.,!?;:'"]/g, '');
+                if (dict[word]) {
+                    result.push(dict[word]);
+                    found = true;
+                } else {
+                    // No traducida, mantener original
+                    result.push(word);
+                }
+                i++;
+            }
+            
+            // Solo retornar si al menos una palabra fue traducida
+            const hasTranslation = result.some(r => /[\u4e00-\u9fff]/.test(r));
+            if (hasTranslation) {
+                return result.join('');
+            }
+        }
+        return text;
+    }
+    
+    // Mostrar caracteres chinos con animación
+    displayChineseCharacters(translation) {
+        if (!this.chineseCharactersDisplay) return;
+        
+        this.chineseCharactersDisplay.innerHTML = '';
+        
+        const chars = translation.split('');
+        chars.forEach((char, index) => {
+            const span = document.createElement('span');
+            span.className = 'chinese-char';
+            span.textContent = char;
+            span.style.animationDelay = `${index * 0.08}s`;
+            
+            // Click para reproducir sonido del carácter
+            span.addEventListener('click', () => {
+                if (typeof audioManager !== 'undefined') {
+                    audioManager.playChineseCharacterSound(char, 0);
+                }
+            });
+            
+            this.chineseCharactersDisplay.appendChild(span);
+        });
+        
+        // Agregar barras de música
+        this.updateChineseMusicBars(chars);
+    }
+
+    // Actualizar panel de traducción china con efectos
+    updateChinesePanel(text) {
+        this.updateChineseTranslation(text);
+    }
+    
+    // Actualizar barras de música para caracteres chinos
+    updateChineseMusicBars(chars) {
+        if (!this.chineseMusicBars) return;
+        
+        this.chineseMusicBars.innerHTML = '';
+        
+        chars.forEach((char, index) => {
+            const bar = document.createElement('div');
+            bar.className = 'chinese-music-bar';
+            
+            // Altura basada en el código del carácter
+            const charCode = char.charCodeAt(0);
+            const height = 10 + (charCode % 30);
+            bar.style.height = `${height}px`;
+            bar.style.animationDelay = `${index * 0.05}s`;
+            
+            this.chineseMusicBars.appendChild(bar);
+        });
+    }
+    
+    // Reproducir sonido de la traducción china
+    playChineseTranslation() {
+        const translation = this.chineseCharactersDisplay?.textContent || '';
+        if (!translation) {
+            this.showNotification('No hay traducción para reproducir', 'warning');
+            return;
+        }
+        
+        audioManager.initAudio();
+        
+        const chars = translation.split('');
+        chars.forEach((char, index) => {
+            setTimeout(() => {
+                audioManager.playChineseCharacterSound(char, 0);
+                
+                // Animar el carácter correspondiente
+                const charElements = this.chineseCharactersDisplay.querySelectorAll('.chinese-char');
+                if (charElements[index]) {
+                    charElements[index].style.transform = 'scale(1.3)';
+                    charElements[index].style.textShadow = '0 0 30px rgba(255, 217, 61, 1)';
+                    setTimeout(() => {
+                        charElements[index].style.transform = 'scale(1)';
+                        charElements[index].style.textShadow = '0 0 20px rgba(255, 217, 61, 0.5)';
+                    }, 300);
+                }
+            }, index * 300);
+        });
     }
 
     // Resaltar palabra completada
@@ -138,13 +437,44 @@ class SpanishChineseApp {
 
     // Limpiar mensaje
     clearMessage() {
-        this.textInput.value = '';
+        if (this.textInput) {
+            this.textInput.value = '';
+        }
         this.messageChars = [];
         this.charIndex = 0;
-        visualizer.clearMessage();
-        const translationContent = translator.translationDisplay.querySelector('.translation-content');
-        if (translationContent) {
-            translationContent.textContent = '';
+        
+        // Limpiar display inline
+        if (this.messageDisplayInline) {
+            this.messageDisplayInline.innerHTML = '';
+        }
+        
+        // Limpiar visualizer si existe
+        if (typeof visualizer !== 'undefined') {
+            visualizer.clearMessage();
+        }
+        
+        // Limpiar traducción antigua si existe
+        if (typeof translator !== 'undefined' && translator.translationDisplay) {
+            const translationContent = translator.translationDisplay.querySelector('.translation-content');
+            if (translationContent) {
+                translationContent.textContent = '';
+            }
+        }
+        
+        // Limpiar panel de caracteres chinos
+        if (this.chineseCharactersDisplay) {
+            this.chineseCharactersDisplay.innerHTML = '';
+        }
+        if (this.pinyinDisplay) {
+            this.pinyinDisplay.textContent = '';
+        }
+        if (this.chineseMusicBars) {
+            this.chineseMusicBars.innerHTML = '';
+        }
+        
+        // Limpiar pentagrama
+        if (typeof musicStaff !== 'undefined') {
+            musicStaff.clearNotes();
         }
     }
 
@@ -309,6 +639,11 @@ function toggleCustomization() {
     panel.classList.toggle('active');
 }
 
+function toggleAudioSettings() {
+    const panel = document.getElementById('audioSettingsPanel');
+    panel.classList.toggle('active');
+}
+
 function toggleCollaboration() {
     const panel = document.getElementById('collaborationPanel');
     panel.classList.toggle('active');
@@ -333,6 +668,37 @@ function useCustomPalette(paletteName) {
 
 function toggleVoiceInput() {
     audioManager.toggleVoiceInput();
+}
+
+// Funciones de audio
+function changeScale(scale) {
+    audioManager.setScale(scale);
+    app.showNotification(`Escala: ${scale}`, 'info');
+}
+
+function changeWaveType(type) {
+    audioManager.setWaveType(type);
+    const names = { sine: 'Piano Suave', triangle: 'Flauta', square: '8-Bit Retro', sawtooth: 'Sintetizador' };
+    app.showNotification(`Instrumento: ${names[type]}`, 'info');
+}
+
+function changeRhythm(pattern) {
+    audioManager.setRhythmPattern(pattern);
+    app.showNotification(`Ritmo: ${pattern}`, 'info');
+}
+
+function changeVolume(value) {
+    if (audioManager.masterGain) {
+        audioManager.masterGain.gain.setValueAtTime(value / 100, audioManager.audioContext.currentTime);
+    }
+    document.getElementById('volumeValue').textContent = value + '%';
+}
+
+// Función para cambiar idioma de entrada
+function setInputLanguage(lang) {
+    if (typeof app !== 'undefined') {
+        app.setInputLanguage(lang);
+    }
 }
 
 // Funciones de historial

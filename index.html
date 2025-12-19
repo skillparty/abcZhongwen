@@ -3,35 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traductor Español-Chino con Visualización</title>
+    <title>Traductor Musical - Español/Inglés a Chino Mandarín 🎵</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <canvas id="canvas"></canvas>
     <div class="floating-particles" id="floatingParticles"></div>
     
-    <div class="instructions">
-        <div class="main-instruction">
-            ✨ español o inglés a chino Mandarin by joseAlejandro ✨
+    <!-- Header con título y selector de idioma -->
+    <header class="app-header">
+        <div class="header-content">
+            <h1 class="app-title">🎵 Traductor Musical</h1>
+            <p class="app-subtitle">Convierte texto en música y caracteres chinos</p>
         </div>
-        <div class="sub-instruction">
-            Cada carácter construye tu historia visual con efectos únicos
+        <div class="language-selector">
+            <label class="language-label">Idioma de entrada:</label>
+            <div class="language-buttons">
+                <button id="langSpanish" class="lang-btn active" onclick="setInputLanguage('es')">
+                    <span class="flag">🇪🇸</span> Español
+                </button>
+                <button id="langEnglish" class="lang-btn" onclick="setInputLanguage('en')">
+                    <span class="flag">🇬🇧</span> English
+                </button>
+            </div>
         </div>
-        <div class="sub-instructions">
-            <span onclick="toggleHistory()" class="interactive-element">📚 Historial</span>
-            <span onclick="toggleCustomization()" class="interactive-element">🎨 Personalizar</span>
-            <span onclick="toggleCollaboration()" class="interactive-element">🤝 Colaborar</span>
+        <div class="header-actions">
+            <button onclick="toggleHistory()" class="header-btn" title="Historial">📚</button>
+            <button onclick="toggleCustomization()" class="header-btn" title="Personalizar">🎨</button>
+            <button onclick="toggleAudioSettings()" class="header-btn" title="Sonido">🎹</button>
         </div>
+    </header>
+
+    <!-- Pentagrama Musical -->
+    <div class="music-staff-wrapper" id="musicStaffWrapper">
+        <!-- El pentagrama se inserta aquí dinámicamente por staff.js -->
     </div>
-    
-    <div class="message-display" id="messageDisplay"></div>
-    
-    <div class="mode-controls">
-        <button class="mode-button active" id="sequentialBtn" title="Modo Secuencial">⏭</button>
-        <button class="mode-button" id="cascadeBtn" title="Modo Cascada">🌊</button>
-        <button class="mode-button" id="burstBtn" title="Modo Explosión">✨</button>
-        <button class="clear-button" id="clearBtn">Limpiar</button>
-    </div>
+
+    <!-- Contenedor principal de dos ventanas -->
+    <main class="main-container">
+        <!-- Ventana de entrada (Español/Inglés) -->
+        <section class="window-panel input-panel">
+            <div class="panel-header-bar">
+                <span class="panel-icon" id="inputPanelIcon">🇪🇸</span>
+                <span class="panel-title-text" id="inputPanelTitle">Escribe en Español</span>
+            </div>
+            <div class="panel-body">
+                <div class="message-display-inline" id="messageDisplay"></div>
+                <div class="input-wrapper">
+                    <input type="text" id="textInput" placeholder="Escribe aquí..." autofocus>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <button onclick="saveCurrentMessage()" class="panel-action-btn" title="Guardar">💾 Guardar</button>
+                <button onclick="shareMessage()" class="panel-action-btn" title="Compartir">🔗 Compartir</button>
+            </div>
+        </section>
+        
+        <!-- Ventana de traducción (Chino Mandarín) -->
+        <section class="window-panel translation-panel">
+            <div class="panel-header-bar chinese-header">
+                <span class="panel-icon">🇨🇳</span>
+                <span class="panel-title-text">Traducción al Chino Mandarín</span>
+                <button id="playChineseBtn" class="play-btn" title="Reproducir">🔊</button>
+            </div>
+            <div class="panel-body chinese-body">
+                <div class="chinese-characters-display" id="chineseCharacters"></div>
+                <div class="pinyin-text" id="pinyinDisplay"></div>
+            </div>
+            <div class="panel-footer">
+                <div class="music-visualization">
+                    <span class="viz-label">♪ Melodía:</span>
+                    <div class="chinese-music-bars" id="chineseMusicBars"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Controles de modo en la parte inferior -->
+    <footer class="app-footer">
+        <div class="mode-controls">
+            <span class="mode-label">Modo:</span>
+            <button class="mode-button active" id="sequentialBtn" title="Secuencial">⏭️</button>
+            <button class="mode-button" id="cascadeBtn" title="Cascada">🌊</button>
+            <button class="mode-button" id="burstBtn" title="Explosión">✨</button>
+            <div class="divider"></div>
+            <button class="clear-button" id="clearBtn">🗑️ Limpiar</button>
+        </div>
+    </footer>
     
     <!-- Panel de Historial -->
     <div class="history-panel" id="historyPanel">
@@ -83,6 +141,49 @@
             </div>
         </div>
     </div>
+    
+    <!-- Panel de Configuración de Audio -->
+    <div class="audio-settings-panel" id="audioSettingsPanel">
+        <div class="panel-header">
+            <h3>🎹 Configuración de Sonido</h3>
+            <button onclick="toggleAudioSettings()" class="close-btn">×</button>
+        </div>
+        <div class="audio-options">
+            <div class="option-group">
+                <label>Escala Musical:</label>
+                <select id="scaleSelect" onchange="changeScale(this.value)">
+                    <option value="pentatonic">Pentatónica (Oriental)</option>
+                    <option value="major">Mayor (Alegre)</option>
+                    <option value="minor">Menor (Melancólica)</option>
+                    <option value="chinese">China Tradicional</option>
+                    <option value="blues">Blues</option>
+                </select>
+            </div>
+            <div class="option-group">
+                <label>Instrumento:</label>
+                <select id="waveSelect" onchange="changeWaveType(this.value)">
+                    <option value="sine">Piano Suave</option>
+                    <option value="triangle">Flauta</option>
+                    <option value="square">8-Bit Retro</option>
+                    <option value="sawtooth">Sintetizador</option>
+                </select>
+            </div>
+            <div class="option-group">
+                <label>Patrón Rítmico:</label>
+                <select id="rhythmSelect" onchange="changeRhythm(this.value)">
+                    <option value="steady">Constante</option>
+                    <option value="waltz">Vals (3/4)</option>
+                    <option value="swing">Swing</option>
+                    <option value="march">Marcha</option>
+                </select>
+            </div>
+            <div class="option-group">
+                <label>Volumen:</label>
+                <input type="range" id="volumeSlider" min="0" max="100" value="30" onchange="changeVolume(this.value)">
+                <span id="volumeValue">30%</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Panel de Colaboración -->
     <div class="collaboration-panel" id="collaborationPanel">
@@ -104,21 +205,10 @@
         </div>
     </div>
 
-    <div class="typing-area">
-        <div class="translation-display" id="translationDisplay">
-            <div class="translation-label">🇨🇳 Traducción al Chino:</div>
-            <div class="translation-content"></div>
-        </div>
-        <div class="input-row">
-            <input type="text" id="textInput" placeholder="Escribe en español o inglés..." autofocus>
-            <button onclick="saveCurrentMessage()" class="save-btn" title="Guardar Mensaje">💾</button>
-            <button onclick="shareMessage()" class="share-btn" title="Compartir Mensaje">🔗</button>
-        </div>
-    </div>
-
     <script src="js/translation.js"></script>
     <script src="js/visualization.js"></script>
     <script src="js/audio.js"></script>
+    <script src="js/staff.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
